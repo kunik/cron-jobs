@@ -6,14 +6,21 @@ function Cron(identifier) {
   this.crontab = Q.nfcall(cronLib.load);
   this.identifier = identifier;
   this.variables = {};
+  this._heap = {};
 
   this
-    .set('job_template', 'bash -l -c \'<%= job %>\'')
+    .set('job_template', '<%= environment_variables %>bash -l -c \'<%= job %>\'')
     .set('output', '>> ./log/cron.log 2>&1')
     .set('path', process.cwd())
+    .set('environment_variables', function() {
+      return _.reduce(_.map(
+          this._val('environmentVariables') || {},
+          function(value, key) { return '' + key + '="' + value + '"'; }
+        ), function(memo, value) { return memo + value + ' '; }, '');
+    })
     .set('environment_variable', 'NODE_ENV')
     .set('environment', 'production')
-    .job_type('command', '<%= task %> <%= output %>');
+    .jobType('command', '<%= task %> <%= output %>');
 }
 
 Cron.prototype.removeAll = function() {
@@ -34,10 +41,22 @@ Cron.prototype.set = function(key, value) {
   return this;
 };
 
-Cron.prototype.job_type = function(name, command) {
+Cron.prototype.env = function(name, value) {
+  value = value || process.env[name];
+  var environmentVariables = this._val('environmentVariables') || {};
+  environmentVariables[name] = value;
+  this._val('environmentVariables', environmentVariables);
+
+  return this;
+};
+
+Cron.prototype.jobType = function(name, command) {
   var _this = this;
   _this[name] = function(task) {
     var variables = _.extend({}, _this.variables);
+    _.each(variables, function(value, key) {
+      if (_.isFunction(value)) variables[key] = value.call(_this);
+    });
     variables.task = task;
     variables.job = _.template(command)(variables);
 
@@ -59,7 +78,6 @@ Cron.prototype.schedule = function(whenCallback, actions) {
       whenCallback = null;
     }
 
-
     for(var i = 0; i < actions.length; i++) {
       job = crontab.create(actions[i], when, this.identifier);
 
@@ -79,6 +97,13 @@ Cron.prototype._enqueue = function(fn) {
   return this;
 };
 
+Cron.prototype._val = function(key) {
+  if (arguments.length == 2) {
+    this._heap[key] = arguments[1];
+  }
+
+  return this._heap[key];
+};
 
 function CronJobs(tasksFile, identifier) {
   this.tasksFile     = tasksFile;

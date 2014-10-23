@@ -14,11 +14,18 @@ $ npm install cron-jobs
 ```javascript
 module.exports = function (cron) {
   cron
+    // set any variable you want
     .set('whenever_command', 'bundle exec whenever')
+    // attach any environment variable to jobs
+    .env('PATH')
+    // or simply define environment variable
+    .env('HELLO', 'WORLD')
 
-    .job_type('rake',    'cd <%= path %> && <%= environment_variable %>=<%= environment %> bundle exec rake <%= task %> --silent <%= output %>')
-    .job_type('runner',  'cd <%= path %> && script/rails runner -e <%= environment %> "<%= task %>" <%= output %>')
+    //define job types
+    .jobType('rake',    'cd <%= path %> && <%= environment_variable %>=<%= environment %> bundle exec rake <%= task %> --silent <%= output %>')
+    .jobType('runner',  'cd <%= path %> && script/rails runner -e <%= environment %> "<%= task %>" <%= output %>')
 
+    //schedule defining time in node-crontab syntax
     .schedule(function(j) {
       j.minute().at(30);
       j.hour().at(9);
@@ -29,7 +36,9 @@ module.exports = function (cron) {
       cron.rake('db:drop'),
       cron.runner('hello()')
     ])
+    // or simply pass date object
     .schedule(new Date(), cron.command('ls -la'))
+    // or use crontab syntax
     .schedule('0 3 * * *', cron.command('echo "hello"'))
     .schedule(function(j) {
       j.hour().every(2);
