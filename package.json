@@ -1,6 +1,6 @@
 {
   "name": "cron-jobs",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Command line tool for managing cron jobs for application",
   "author": {
     "name": "Taras Kunch",
@@ -9,6 +9,9 @@
   "repository": {
     "type": "git",
     "url": "git@github.com:kunik/cron-jobs.git"
+  },
+  "bin": {
+    "cron-jobs": "bin/cron-jobs"
   },
   "preferGlobal": true,
   "main": "index.js",
