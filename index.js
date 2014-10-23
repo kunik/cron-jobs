@@ -9,7 +9,7 @@ function Cron(identifier) {
   this._heap = {};
 
   this
-    .set('job_template', '<%= environment_variables %>bash -l -c \'<%= job %>\'')
+    .set('job_template', '<%= environment_variables %>/bin/bash -l -c \'<%= job %>\'')
     .set('output', '>> ./log/cron.log 2>&1')
     .set('path', process.cwd())
     .set('environment_variables', function() {
